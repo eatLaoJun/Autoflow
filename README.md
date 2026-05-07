@@ -1,153 +1,248 @@
-# 需求全流程自动化 Agent 系统
+# Autoflow - 需求流程自动化智能体系统
 
-## 项目概述
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12+-green.svg)](https://www.python.org/downloads/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.30+-red.svg)](https://streamlit.io/)
 
-这是一个由多个 Agent 协同驱动的需求全流程自动化系统，旨在将用户的模糊需求描述自动转换为完整的需求文档包（PRD + 技术方案 + 测试用例 + 风险报告）。
+从一句话需求到完整文档包 - 由 OpenAI GPT-4o 驱动的智能体系统。
 
-## 系统架构
+---
 
-```
-用户交互层
-    ↓
-编排控制层 (Orchestrator)
-    ↓
-┌─────────────┬─────────────┬─────────────┬─────────────┬─────────────┐
-│ 需求澄清 Agent │ PRD 生成 Agent │ 技术方案 Agent │ 测试用例 Agent │ 风险评估 Agent │
-└─────────────┴─────────────┴─────────────┴─────────────┴─────────────┘
-    ↓                           ↓
-              数据存储层 (本地 JSON + Markdown)
-```
+## 🌟 项目简介
 
-## 快速开始
+Autoflow 是一个**需求流程自动化智能体系统**，能够通过多轮对话澄清需求，自动生成：
 
-### 环境要求
+- 📋 **需求卡片** - 结构化需求信息
+- 📄 **产品需求文档（PRD）** - 完整的产品需求说明\
+- ⚙️ **技术方案** - 架构设计、API设计、工作量估算\
+- ✅ **测试用例** - P0/P1/P2 三级测试用例\
+- ⚠️ **风险评估报告** - 量化风险评分与改进建议\
 
-- Python 3.10+
-- OpenAI API Key
+---
 
-### 安装步骤
+## ✨ 核心特性
 
-1. 克隆项目到本地
-2. 安装依赖：
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. 配置环境变量：
-   ```bash
-   cp .env.example .env
-   # 编辑 .env 文件，填入您的 OpenAI API Key
-   ```
+| 特性 | 说明 |
+|------|------|
+| 🤖 **多智能体协作** | ClarifyAgent、PRDAgent、TechAgent、TestAgent、RiskAgent 协同工作 |
+| 💬 **智能澄清对话** | 借鉴 YC Office Hours 六问，挑战需求真实性 |
+| 📊 **中英文双语** | 侧边栏一键切换，支持中文/English |
+| 🔄 **并行生成** | TechAgent 和 TestAgent 并行执行，提速50% |
+| 📈 **架构审查** | 输出ASCII架构图、状态转换图、依赖清单 |
+| 📉 **量化风险评估** | 1-10分评分，含触发条件、概率、影响范围 |
+| 📥 **多格式下载** | 支持 Markdown 和 JSON 两种格式 |
 
-### 运行方式
+---
 
-#### 命令行界面 (CLI)
+## 🚀 快速开始
+
+### 1. 克隆项目
+
 ```bash
-python main.py
+git clone https://github.com/xuan599/Autoflow.git
+cd Autoflow
 ```
 
-#### Web 界面 (Streamlit)
+### 2. 配置环境变量
+
 ```bash
+cp .env.example .env
+# 编辑 .env，填入你的 OpenAI API Key
+# OPENAI_API_KEY=your_api_key_here
+# OPENAI_BASE_URL=https://api.openai.com/v1
+# MODEL_NAME=gpt-4o
+```
+
+### 3. 安装依赖
+
+```bash
+# 创建虚拟环境（可选）
+python -m venv venv
+
+# 安装依赖
+venv/Scripts/pip install -r requirements.txt
+# 或
+pip install -r requirements.txt
+```
+
+### 4. 启动应用
+
+```bash
+venv/Scripts/streamlit run app.py
+# 或
 streamlit run app.py
 ```
 
-## 核心功能
+### 5. 访问应用
 
-### 5 个核心 Agent
+打开浏览器访问：**http://localhost:8501**
 
-1. **需求澄清 Agent (ClarifyAgent)**：通过多轮对话澄清用户模糊需求，输出结构化需求卡片
-2. **PRD 生成 Agent (PRDAgent)**：基于需求卡片生成完整产品需求文档
-3. **技术方案 Agent (TechAgent)**：基于 PRD 生成技术实现方案
-4. **测试用例 Agent (TestAgent)**：基于 PRD 和技术方案生成分级测试用例
-5. **风险评估 Agent (RiskAgent)**：综合分析所有文档，输出风险评估报告
+---
 
-### 输出格式
-
-- 结构化需求卡片 (JSON)
-- 产品需求文档 (PRD) (JSON)
-- 技术方案 (JSON)
-- 测试用例 (JSON)
-- 风险评估报告 (JSON)
-- 完整需求分析报告 (Markdown)
-
-## 项目结构
+## 📖 使用流程
 
 ```
-requirement-agent/
-├── main.py                 # CLI 主入口
-├── app.py                  # Streamlit Web UI
-├── requirements.txt        # 项目依赖
-├── .env.example            # 环境变量模板
-├── README.md               # 本文件
-├── agents/                 # Agent 实现
-│   ├── __init__.py
-│   ├── base_agent.py       # BaseAgent 基类
-│   ├── clarify_agent.py    # 需求澄清 Agent
-│   ├── prd_agent.py        # PRD 生成 Agent
-│   ├── tech_agent.py       # 技术方案 Agent
-│   ├── test_agent.py       # 测试用例 Agent
-│   └── risk_agent.py       # 风险评估 Agent
-├── models/                 # 数据模型
-│   ├── __init__.py
-│   └── schemas.py          # Pydantic Schema 定义
-├── prompts/                # Prompt 模板
-│   ├── __init__.py
-│   ├── clarify_system.txt
-│   ├── prd_system.txt
-│   ├── tech_system.txt
-│   ├── test_system.txt
-│   └── risk_system.txt
-├── core/                   # 核心组件
-│   ├── __init__.py
-│   ├── orchestrator.py     # 主编排器
-│   ├── state_manager.py    # 状态持久化
-│   └── output_generator.py # 报告生成器
-├── utils/                  # 工具函数
-│   ├── __init__.py
-│   ├── retry.py            # 重试装饰器
-│   └── validator.py        # 输出校验工具
-└── output/                 # 输出目录（ gitignore 中）
+┌─────────────────┐
+│  用户输入一句话需求（如："我想做一个用户积分兑换商品的功能"）  │
+└──────────────┬──────────────┘
+               │
+               ▼
+┌─────────────────┐
+│  多轮澄清对话（3-5轮）                              │
+│  - 用户角色、业务背景、核心操作、约束条件              │
+│  - 借鉴 YC Office Hours 六问，挑战需求真实性            │
+└──────────────┬──────────────┘
+               │
+               ▼
+┌─────────────────┐
+│  自动生成全套文档（并行执行）                        │
+│  ✅ PRD 文档（含用户故事、核心流程、异常流程）          │
+│  ✅ 技术方案（含API设计、数据库变更、工作量估算）       │
+│  ✅ 测试用例（P0×5 + P1×3 + P2×3）               │
+│  ✅ 风险评估（量化评分 + 改进建议）                  │
+└──────────────┬──────────────┘
+               │
+               ▼
+┌─────────────────┐
+│  查看结果 & 下载文档                                │
+│  - Web界面查看（5个标签页）                         │
+│  - 下载 Markdown 报告                              │
+│  - 下载 JSON 文件（便于二次开发）                    │
+└─────────────────┘
 ```
 
-## 配置说明
+---
 
-系统支持通过 `.env` 文件进行配置：
+## 📂 项目结构
 
-- `OPENAI_API_KEY`：OpenAI API 密钥（**必填**）
-- `MODEL_NAME`：使用的模型名称（默认：`gpt-4o`）
-- `MAX_RETRY_TIMES`：最大重试次数（默认：`3`）
-- `MAX_CLARIFY_ROUNDS`：最大澄清轮数（默认：`5`）
-- `OUTPUT_DIR`：输出目录（默认：`output`）
-
-## 测试
-
-项目包含完整的测试套件：
-
-```bash
-# 运行所有非 E2E 测试（快速）
-pytest -m "not e2e"
-
-# 运行单元测试
-pytest tests/unit/
-
-# 运行组件测试
-pytest tests/component/
-
-# 运行集成测试
-pytest tests/integration/
-
-# 运行 E2E 测试（需要 API Key）
-pytest tests/e2e/ -m e2e -s
+```
+Autoflow/
+├── agents/              # 智能体实现
+│   ├── base_agent.py         # 基础智能体类
+│   ├── clarify_agent.py     # 需求澄清智能体
+│   ├── prd_agent.py         # PRD生成智能体
+│   ├── tech_agent.py        # 技术方案智能体
+│   ├── test_agent.py        # 测试用例智能体
+│   └── risk_agent.py        # 风险评估智能体
+├── core/                # 核心逻辑
+│   ├── orchestrator.py     # 流程编排器
+│   ├── output_generator.py # 输出生成器
+│   └── state_manager.py   # 状态管理
+├── models/              # 数据模型（Pydantic）
+│   └── schemas.py
+├── utils/               # 工具函数
+│   ├── retry.py           # 重试装饰器
+│   └── validator.py       # 输出验证
+├── prompts/             # 提示词模板
+│   ├── clarify_system.txt   # 澄清提示词（含YC六问）
+│   ├── prd_system.txt      # PRD生成提示词
+│   ├── tech_system.txt     # 技术方案提示词（含架构审查）
+│   ├── test_system.txt     # 测试用例提示词
+│   └── risk_system.txt    # 风险评估提示词（含量化评分）
+├── docs/                # 项目文档
+│   ├── PRD.md             # 产品需求文档
+│   ├── 使用场景.md
+│   ├── 闭环流程示例.md
+│   └── 问题修复记录.md
+├── app.py               # Streamlit Web UI
+├── requirements.txt      # Python 依赖
+├── .env.example         # 环境变量示例
+└── README.md            # 本文件
 ```
 
-## 质量保障
+---
 
-- 所有输出必须通过 Pydantic Schema 校验
-- PRD 字数 > 800 字
-- 测试用例总数 ≥ 11 条（P0≥5 + P1≥3 + P2≥3）
-- 风险报告必须给出明确的风险等级
-- 单个 Agent 失败自动重试，最多 3 次
-- 中间状态实时保存，支持断点恢复
+## 🎯 使用场景
 
-## 许可证
+### 场景一：产品经理快速出PRD
+**用户**：产品经理小王  
+**需求**："做个用户积分兑换功能"  
+**结果**：30分钟内生成完整PRD文档（原本需要2-3天）
 
-MIT License
+### 场景二：技术负责人评估工作量
+**用户**：技术Leader小李  
+**需求**："开发社区团购团长管理后台"  
+**结果**：自动生成技术方案 + 工作量估算（前端5天、后端8天、测试3天）
+
+### 场景三：测试人员获取测试用例
+**用户**：测试工程师小张  
+**需求**：加载已有需求  
+**结果**：自动生成P0/P1/P2三级测试用例（共15+个）
+
+### 场景四：项目经理风险评估
+**用户**：项目经理小赵  
+**需求**：新功能上线前评估  
+**结果**：量化风险评分（中风险7分）+ 改进建议
+
+### 场景五：新人接手项目
+**用户**：刚入职的开发小陈  
+**需求**：快速理解需求和技术方案  
+**结果**：通过历史会话快速了解项目全貌
+
+---
+
+## 🔧 技术栈
+
+| 类别 | 技术 |
+|------|------|
+| **后端** | Python 3.12+ |
+| **Web框架** | Streamlit 1.30+ |
+| **AI模型** | OpenAI GPT-4o（支持自定义Base URL） |
+| **数据验证** | Pydantic v2.13+ |
+| **异步处理** | asyncio |
+| **提示词工程** | 借鉴 GStack / Superpowers 方法论 |
+
+---
+
+## 📊 系统要求
+
+| 要求 | 说明 |
+|------|------|
+| Python | 3.12 或更高版本 |
+| OpenAI API Key | 有效且余额充足 |
+| 内存 | 建议 4GB+ |
+| 网络 | 能够访问 OpenAI API（或配置代理） |
+
+---
+
+## 🛠️ 已知问题 & 修复记录
+
+详见 [问题修复记录.md](docs/问题修复记录.md)
+
+**主要修复**：
+- ✅ ClarifyAgent 状态重置问题
+- ✅ OutputGenerator 硬编码目录问题
+- ✅ 中英文切换功能
+- ✅ 对话界面JSON显示问题
+
+---
+
+## 🤝 贡献指南
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 提交 Pull Request
+
+---
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
+
+---
+
+## 📧 联系方式
+
+- **项目地址**：https://github.com/xuan599/Autoflow
+- **Issues**：https://github.com/xuan599/Autoflow/issues
+- **作者**：Xuan (2717485102@qq.com)
+
+---
+
+## 🙏 致谢
+
+- 提示词方法论借鉴自 [GStack](https://github.com/garrytan/gstack) 和 [Superpowers](https://github.com/obra/superpowers)
+- UI框架使用 [Streamlit](https://streamlit.io/)
+- AI模型由 [OpenAI](https://openai.com/) 提供
