@@ -280,6 +280,9 @@ with st.sidebar:
     
     # New requirement button
     if st.button(t('new_requirement'), use_container_width=True):
+        # 重新创建 Orchestrator，重置所有agent状态
+        from core.orchestrator import Orchestrator
+        st.session_state.orchestrator = Orchestrator()
         st.session_state.stage = 'initialized'
         st.session_state.messages = []
         st.session_state.session = None

@@ -8,13 +8,13 @@ from .state_manager import SessionState
 class OutputGenerator:
     """Generates Markdown reports and saves JSON outputs"""
     
-    def __init__(self):
-        pass
+    def __init__(self, output_dir: str = "output"):
+        self.output_dir = output_dir
     
     def save(self, session: SessionState) -> str:
         """Save all generated documents and return output path"""
         # Create session directory
-        session_dir = os.path.join("output", session.session_id)
+        session_dir = os.path.join(self.output_dir, session.session_id)
         os.makedirs(session_dir, exist_ok=True)
         
         # Save JSON files

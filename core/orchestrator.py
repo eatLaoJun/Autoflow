@@ -21,7 +21,7 @@ class Orchestrator:
         self.tech_agent = TechAgent()
         self.test_agent = TestAgent()
         self.risk_agent = RiskAgent()
-        self.output_generator = OutputGenerator()
+        self.output_generator = OutputGenerator(self.output_dir)
         self.on_progress: Optional[Callable[[str, int, str], None]] = None
         self.output_dir = output_dir
         
