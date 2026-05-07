@@ -214,6 +214,95 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Custom CSS for better UI
+st.markdown("""
+<style>
+    /* Main container */
+    .main .block-container {
+        padding-top: 2rem;
+        padding-left: 5%;
+        padding-right: 5%;
+    }
+    
+    /* Chat messages */
+    .stChatMessage {
+        border-radius: 10px;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* User message */
+    .stChatMessage[data-testid="stChatMessage"]:nth-child(odd) {
+        background-color: #f0f2f6;
+    }
+    
+    /* Assistant message */
+    .stChatMessage[data-testid="stChatMessage"]:nth-child(even) {
+        background-color: #e8f4fd;
+    }
+    
+    /* Progress bar */
+    .stProgress > div > div > div {
+        background-color: #4CAF50;
+    }
+    
+    /* Metric cards */
+    .stMetric {
+        background-color: #f9f9f9;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    
+    /* Expander */
+    .streamlit-expanderHeader {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    /* Download button */
+    .stDownloadButton > button {
+        background-color: #4CAF50;
+        color: white;
+        border-radius: 6px;
+        border: none;
+        padding: 0.5rem 1rem;
+    }
+    
+    .stDownloadButton > button:hover {
+        background-color: #45a049;
+    }
+    
+    /* Sidebar */
+    .css-1d391kg {
+        background-color: #f8f9fa;
+    }
+    
+    /* Tabs */
+    .stTabs [data-baseweb-tabs-list] {
+        background-color: #f0f2f6;
+        border-radius: 8px;
+        padding: 0.5rem;
+    }
+    
+    .stTabs [data-baseweb-tabs-tab] {
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+    }
+    
+    .stTabs [data-baseweb-tabs-tab][aria-selected="true"] {
+        background-color: #4CAF50;
+        color: white;
+    }
+    
+    /* Status text */
+    .element-container [data-testid="stText"] {
+        font-size: 0.9rem;
+        color: #666;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 def init_session_state():
     """Initialize Streamlit session state"""
     if 'lang' not in st.session_state:
@@ -297,13 +386,38 @@ st.caption(t('page_caption'))
 # Progress bar and status
 progress_bar = st.empty()
 status_text = st.empty()
+progress_container = st.container()
 
 def update_progress(progress, status):
-    """Update progress bar and status"""
+    """Update progress bar and status with visual indicators"""
     st.session_state.progress = progress
     st.session_state.status = status
-    progress_bar.progress(progress / 100)
-    status_text.text(status)
+    
+    with progress_container:
+        # Progress bar
+        progress_bar.progress(progress / 100)
+        
+        # Status with icons
+        if progress < 30:
+            icon = "💬"
+            stage_name = t('requirement_clarification')
+        elif progress < 50:
+            icon = "📄"
+            stage_name = t('starting_prd')
+        elif progress < 70:
+            icon = "⚙️"
+            stage_name = t('running_tech_test')
+        elif progress < 90:
+            icon = "✅"
+            stage_name = t('tech_test_complete')
+        elif progress < 100:
+            icon = "⚠️"
+            stage_name = t('risk_complete')
+        else:
+            icon = "✅"
+            stage_name = t('all_completed')
+        
+        status_text.markdown(f"{icon} **{stage_name}** - {status}")
 
 # Clarification stage
 if st.session_state.stage in ['initialized', 'clarifying']:
@@ -417,122 +531,242 @@ elif st.session_state.stage == 'done':
             t('risk_report')  
         ])
         
-        # Tab 1: Requirement Card
+        # Tab 1: Requirement Card (美化版）
         with tab1:
             if session.requirement_card:
                 card = session.requirement_card
-                st.text_input(t('name'), value=card.name, disabled=True)
-                st.text_area(t('background'), value=card.background, height=100, disabled=True)
-                st.text_input(t('user_roles'), value=", ".join(card.user_roles), disabled=True)
-                st.text_area(t('core_actions'), value="\n".join(card.core_actions), height=100, disabled=True)
-                st.text_area(t('constraints'), value="\n".join(card.constraints) if card.constraints else t('none'), height=100, disabled=True)
-                st.text_area(t('out_of_scope'), value="\n".join(card.out_of_scope) if card.out_of_scope else t('none'), height=100, disabled=True)
-                st.text_input(t('tech_stack'), value=card.tech_stack, disabled=True)
-                st.checkbox(t('complete'), value=card.is_complete, disabled=True)
+                # 使用容器和图标美化
+                with st.container():
+                    st.markdown(f"### 📋 {card.name}")
+                    st.markdown("---")
+                    
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        st.markdown(f"**{t('background')}**：{card.background}")
+                    with col2:
+                        status = "✅ 完整" if card.is_complete else "⚠️ 待完善"
+                        st.markdown(f"**状态**：{status}")
+                    
+                    st.markdown(f"**{t('user_roles')}**：{', '.join(card.user_roles)}")
+                    
+                    st.markdown(f"**{t('core_actions')}**：")
+                    for action in card.core_actions:
+                        st.markdown(f"- {action}")
+                    
+                    if card.constraints:
+                        st.markdown(f"**{t('constraints')}**：")
+                        for c in card.constraints:
+                            st.markdown(f"- {c}")
+                    else:
+                        st.markdown(f"**{t('constraints')}**：{t('none')}")
+                    
+                    if card.out_of_scope:
+                        st.markdown(f"**{t('out_of_scope')}**：")
+                        for o in card.out_of_scope:
+                            st.markdown(f"- {o}")
+                    else:
+                        st.markdown(f"**{t('out_of_scope')}**：{t('none')}")
+                    
+                    st.markdown(f"**{t('tech_stack')}**：{card.tech_stack}")
             else:
                 st.warning(t('no_requirement_card'))
+                st.info("请先通过对话生成需求卡片")
         
-        # Tab 2: PRD
+        # Tab 2: PRD (美化版）
         with tab2:
             if session.prd:
                 prd = session.prd
-                st.text_input(t('title'), value=prd.title, disabled=True)
-                st.text_area(t('background'), value=prd.background, height=100, disabled=True)
-                st.text_area(t('user_stories'), value="\n".join(prd.user_stories), height=150, disabled=True)
-                st.text_area(t('core_flow'), value=prd.core_flow, height=150, disabled=True)
-                st.text_area(t('exception_flow'), value=prd.exception_flow, height=150, disabled=True)
-                st.text_area(t('data_fields'), value="\n".join(prd.data_fields), height=100, disabled=True)
-                st.text_area(t('non_functional'), value=prd.non_functional, height=100, disabled=True)
-                st.text_area(t('out_of_scope'), value=prd.out_of_scope, height=100, disabled=True)
+                with st.container():
+                    st.markdown(f"### 📄 {prd.title}")
+                    st.markdown("---")
+                    
+                    st.markdown(f"**{t('background')}**：{prd.background}")
+                    
+                    st.markdown(f"**{t('user_stories')}**：")
+                    for story in prd.user_stories:
+                        st.markdown(f"- {story}")
+                    
+                    st.markdown(f"**{t('core_flow')}**：")
+                    st.markdown(prd.core_flow)
+                    
+                    st.markdown(f"**{t('exception_flow')}**：")
+                    st.markdown(prd.exception_flow)
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.markdown(f"**{t('data_fields')}**：")
+                        for field in prd.data_fields:
+                            st.markdown(f"- {field}")
+                    with col2:
+                        st.markdown(f"**{t('non_functional')}**：")
+                        st.markdown(prd.non_functional)
+                    
+                    st.markdown(f"**{t('out_of_scope')}**：{prd.out_of_scope}")
             else:
                 st.warning(t('no_prd'))
+                st.info("请先完成需求澄清，系统将自动生成PRD文档")
         
-        # Tab 3: Tech Plan
+        # Tab 3: Tech Plan (美化版）
         with tab3:
             if session.tech_plan:
                 plan = session.tech_plan
-                st.text_area(t('involved_modules'), value="\n".join(plan.involved_modules), height=100, disabled=True)
-                
-                if plan.new_apis:  
-                    st.subheader(t('new_apis'))
-                    for api in plan.new_apis:  
-                        with st.expander(f"{api.name} ({api.method})"):  
-                            st.text(f"{t('description')}: {api.description}")  
-                            st.text(f"{t('params')}: {', '.join(api.params) if api.params else t('none')}")  
-                            st.text(f"{t('response')}: {api.response}")  
-                
-                if plan.modified_apis:  
-                    st.subheader(t('modified_apis'))  
-                    for api in plan.modified_apis:  
-                        st.text(f"- {api}")  
-                
-                st.text_area(t('database_changes'), value="\n".join(plan.db_changes) if plan.db_changes else t('none'), height=100, disabled=True)  
-                
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric(t('frontend_days'), plan.estimated_days.get('frontend', 0))  
-                with col2:
-                    st.metric(t('backend_days'), plan.estimated_days.get('backend', 0))  
-                with col3:  
-                    st.metric(t('testing_days'), plan.estimated_days.get('testing', 0))  
-                
-                st.text_area(t('technical_risks'), value="\n".join(plan.tech_risks) if plan.tech_risks else t('none'), height=100, disabled=True)  
+                with st.container():
+                    st.markdown(f"### ⚙️ {t('tech_plan')}")
+                    st.markdown("---")
+                    
+                    # 涉及模块
+                    st.markdown(f"**{t('involved_modules')}**：")
+                    for mod in plan.involved_modules:
+                        st.markdown(f"🔹 {mod}")
+                    
+                    # 新增API
+                    if plan.new_apis:  
+                        st.markdown(f"**{t('new_apis')}**：")
+                        for api in plan.new_apis:  
+                            with st.expander(f"🔌 {api.name} ({api.method})"):  
+                                st.markdown(f"**{t('description')}**：{api.description}")  
+                                st.markdown(f"**{t('params')}**：{', '.join(api.params) if api.params else t('none')}")  
+                                st.markdown(f"**{t('response')}**：{api.response}")  
+                    
+                    # 修改API
+                    if plan.modified_apis:  
+                        st.markdown(f"**{t('modified_apis')}**：")  
+                        for api in plan.modified_apis:  
+                            st.markdown(f"✏️ {api}")  
+                    
+                    # 数据库变更
+                    if plan.db_changes:
+                        st.markdown(f"**{t('database_changes')}**：")
+                        for change in plan.db_changes:
+                            st.markdown(f"🗄️ {change}")
+                    else:
+                        st.markdown(f"**{t('database_changes')}**：{t('none')}")
+                    
+                    # 工作量估算
+                    st.markdown(f"**{t('estimated_days')}**：")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric(label=t('frontend_days'), value=plan.estimated_days.get('frontend', 0), help="前端开发天数")
+                    with col2:
+                        st.metric(label=t('backend_days'), value=plan.estimated_days.get('backend', 0), help="后端开发天数")
+                    with col3:  
+                        st.metric(label=t('testing_days'), value=plan.estimated_days.get('testing', 0), help="测试验证天数")
+                    
+                    # 技术风险
+                    if plan.tech_risks:
+                        st.markdown(f"**{t('technical_risks')}**：")
+                        for risk in plan.tech_risks:
+                            st.markdown(f"⚠️ {risk}")
+                    else:
+                        st.markdown(f"**{t('technical_risks')}**：{t('none')}")
             else:  
-                st.warning(t('no_tech_plan'))  
+                st.warning(t('no_tech_plan'))
+                st.info("请先完成需求澄清，系统将自动生成技术方案")
         
-        # Tab 4: Test Cases  
+        # Tab 4: Test Cases (美化版）
         with tab4:  
             if session.test_cases:  
                 cases = session.test_cases  
-                st.metric(t('total_cases'), cases.total_count)  
                 
+                # 统计卡片
+                st.markdown("### ✅ 测试用例总览")
                 col1, col2, col3 = st.columns(3)  
                 with col1:  
-                    st.metric(t('p0_main_flow'), len(cases.main_flow_cases))  
+                    st.metric(label="🔹 P0 主流程", value=len(cases.main_flow_cases), help="核心流程用例，必须全部通过")
                 with col2:  
-                    st.metric(t('p1_exception'), len(cases.exception_cases))  
+                    st.metric(label="⚠️ P1 异常场景", value=len(cases.exception_cases), help="异常处理用例，验证系统健壮性")
                 with col3:  
-                    st.metric(t('p2_boundary'), len(cases.boundary_cases))  
+                    st.metric(label="🎯 P2 边界场景", value=len(cases.boundary_cases), help="边界条件用例，验证极值处理")
                 
-                st.subheader(t('p0_cases'))  
-                for i, case in enumerate(cases.main_flow_cases, 1):  
-                    with st.expander(t('case', i, case.precondition[:30])):  
-                        st.text(f"{t('priority')}: {case.priority}")  
-                        st.text(f"{t('precondition')}: {case.precondition}")  
-                        st.text(f"{t('steps')}: {case.steps}")  
-                        st.text(f"{t('expected')}: {case.expected}")  
+                # P0 主流程用例
+                if cases.main_flow_cases:
+                    st.markdown("#### 🔹 P0 主流程用例")
+                    for i, case in enumerate(cases.main_flow_cases, 1):  
+                        with st.expander(f"💎 用例 {i}: {case.precondition[:30]}..."):  
+                            col_a, col_b = st.columns([1, 3])
+                            with col_a:
+                                st.markdown(f"**优先级**\nP0")
+                            with col_b:
+                                st.markdown(f"**前置条件**\n{case.precondition}")
+                            st.markdown(f"**步骤**\n{case.steps}")
+                            st.success(f"**预期结果**: {case.expected}")
                 
-                st.subheader(t('p1_cases'))  
-                for i, case in enumerate(cases.exception_cases, 1):  
-                    with st.expander(t('case', i, case.precondition[:30])):  
-                        st.text(f"{t('priority')}: {case.priority}")  
-                        st.text(f"{t('precondition')}: {case.precondition}")  
-                        st.text(f"{t('steps')}: {case.steps}")  
-                        st.text(f"{t('expected')}: {case.expected}")  
+                # P1 异常场景用例
+                if cases.exception_cases:
+                    st.markdown("#### ⚠️ P1 异常场景用例")
+                    for i, case in enumerate(cases.exception_cases, 1):  
+                        with st.expander(f"⚠️ 用例 {i}: {case.precondition[:30]}..."):  
+                            col_a, col_b = st.columns([1, 3])
+                            with col_a:
+                                st.markdown(f"**优先级**\nP1")
+                            with col_b:
+                                st.markdown(f"**前置条件**\n{case.precondition}")
+                            st.markdown(f"**步骤**\n{case.steps}")
+                            st.warning(f"**预期结果**: {case.expected}")
                 
-                st.subheader(t('p2_cases'))  
-                for i, case in enumerate(cases.boundary_cases, 1):  
-                    with st.expander(t('case', i, case.precondition[:30])):  
-                        st.text(f"{t('priority')}: {case.priority}")  
-                        st.text(f"{t('precondition')}: {case.precondition}")  
-                        st.text(f"{t('steps')}: {case.steps}")  
-                        st.text(f"{t('expected')}: {case.expected}")  
+                # P2 边界场景用例
+                if cases.boundary_cases:
+                    st.markdown("#### 🎯 P2 边界场景用例")
+                    for i, case in enumerate(cases.boundary_cases, 1):  
+                        with st.expander(f"🎯 用例 {i}: {case.precondition[:30]}..."):  
+                            col_a, col_b = st.columns([1, 3])
+                            with col_a:
+                                st.markdown(f"**优先级**\nP2")
+                            with col_b:
+                                st.markdown(f"**前置条件**\n{case.precondition}")
+                            st.markdown(f"**步骤**\n{case.steps}")
+                            st.info(f"**预期结果**: {case.expected}")
             else:  
-                st.warning(t('no_test_cases'))  
+                st.warning(t('no_test_cases'))
+                st.info("请先完成需求澄清，系统将自动生成测试用例")
         
-        # Tab 5: Risk Report  
+        # Tab 5: Risk Report (美化版）
         with tab5:  
             if session.risk_report:  
                 report = session.risk_report  
-                risk_emoji = {"High": "🔴", "Medium": "🟡", "Low": "🟢"}.get(report.risk_level, "⚪")  
-                st.metric(t('risk_level'), f"{risk_emoji} {report.risk_level}")  
-                st.checkbox(t('human_review'), value=report.needs_human_review, disabled=True)  
                 
-                st.text_area(t('risk_points'), value="\n".join(report.risk_points) if report.risk_points else t('none'), height=100, disabled=True)  
-                st.text_area(t('suggestions'), value="\n".join(report.suggestions) if report.suggestions else t('none'), height=100, disabled=True)  
-                st.text_area(t('uncovered_scenarios'), value="\n".join(report.uncovered_scenarios) if report.uncovered_scenarios else t('none'), height=100, disabled=True)  
+                # 风险等级显示（带颜色）
+                risk_color = {"High": "#ff4444", "Medium": "#ffa500", "Low": "#00cc00"}.get(report.risk_level, "#666666")
+                risk_emoji = {"High": "🔴", "Medium": "🟡", "Low": "🟢"}.get(report.risk_level, "⚪")
+                
+                st.markdown(f"### ⚠️ {t('risk_report')}")
+                st.markdown("---")
+                
+                # 风险等级卡片
+                col1, col2 = st.columns([1, 3])
+                with col1:
+                    st.metric(label="风险等级", value=f"{risk_emoji} {report.risk_level}", 
+                             help="High: 需立即处理 | Medium: 需补充内容 | Low: 可直接进行")
+                with col2:
+                    human_review = "✅ 需要" if report.needs_human_review else "❌ 不需要"
+                    st.metric(label=t('human_review'), value=human_review)
+                
+                # 风险点
+                if report.risk_points:
+                    st.markdown(f"**{t('risk_points')}**：")
+                    for i, point in enumerate(report.risk_points, 1):
+                        st.markdown(f"🔹 **{i}.** {point}")
+                else:
+                    st.markdown(f"**{t('risk_points')}**：{t('none')}")
+                
+                # 改进建议
+                if report.suggestions:
+                    st.markdown(f"**{t('suggestions')}**：")
+                    for i, sug in enumerate(report.suggestions, 1):
+                        st.markdown(f"💡 **{i}.** {sug}")
+                else:
+                    st.markdown(f"**{t('suggestions')}**：{t('none')}")
+                
+                # 未覆盖场景
+                if report.uncovered_scenarios:
+                    st.markdown(f"**{t('uncovered_scenarios')}**：")
+                    for i, scene in enumerate(report.uncovered_scenarios, 1):
+                        st.markdown(f"🎯 **{i}.** {scene}")
+                else:
+                    st.markdown(f"**{t('uncovered_scenarios')}**：{t('none')}")
             else:  
-                st.warning(t('no_risk_report'))  
+                st.warning(t('no_risk_report'))
+                st.info("请先完成需求澄清，系统将自动生成风险评估报告")
         
         # Download buttons  
         st.divider()  
